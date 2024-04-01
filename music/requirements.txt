@@ -1,0 +1,7 @@
+moviepy.editor
+os
+pygame.mixer
+pytube==15.0.0
+random
+shutil
+tkinter

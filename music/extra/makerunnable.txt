@@ -1,0 +1,7 @@
+cmd in the directory of this
+
+
+
+
+paste this - pyinstaller --onefile main.py
+
