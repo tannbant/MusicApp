@@ -1,0 +1,140 @@
+<html>
+<head>
+    <title>Crash Game</title>
+    <style>
+        body {
+            background-color: #121212;
+            color: #ffffff;
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        #gameContainer {
+            background-color: #1e1e1e;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        #credits {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+        #betInput {
+            padding: 5px;
+            margin-bottom: 10px;
+        }
+        #startButton, #cashOutButton {
+            padding: 10px 20px;
+            margin: 5px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        #startButton:disabled, #cashOutButton:disabled {
+            background-color: #555555;
+            cursor: not-allowed;
+        }
+        #multiplier {
+            font-size: 48px;
+            margin: 20px 0;
+        }
+        #message {
+            margin-top: 20px;
+            font-size: 18px;
+        }
+    </style>
+</head>
+<body>
+    <div id="gameContainer">
+        <div id="credits">50.00</div>
+        <input id="betInput" type="number" min="1" step="1" placeholder="Enter bet amount">
+        <button id="startButton" onclick="startGame()">Start Game</button>
+        <div id="multiplier">1.0</div>
+        <button id="cashOutButton" onclick="cashOut()" disabled>Cash Out</button>
+        <div id="message"></div>
+    </div>
+
+    <script>
+        let currentCredits = 50;
+        let betAmount = 0;
+        let currentMultiplier = 1.0;
+        let crashMultiplier = 0;
+        let gameState = 'idle'; // 'idle' or 'running'
+        let intervalId = null;
+
+        function startGame() {
+            if (gameState !== 'idle') return;
+            betAmount = parseFloat(document.getElementById('betInput').value);
+            if (isNaN(betAmount) || betAmount <= 0 || betAmount > currentCredits) {
+                alert('Invalid bet amount');
+                return;
+            }
+            currentCredits -= betAmount;
+            updateCreditsDisplay();
+            gameState = 'running';
+            currentMultiplier = 1.0;
+            updateMultiplierDisplay();
+            determineCrashPoint();
+            document.getElementById('message').textContent = 'Game started. Cash out before it crashes!';
+            document.getElementById('startButton').disabled = true;
+            document.getElementById('cashOutButton').disabled = false;
+            if (currentMultiplier >= crashMultiplier) {
+                crashGame();
+            } else {
+                intervalId = setInterval(updateGame, 1000);
+            }
+        }
+
+        function determineCrashPoint() {
+            let K = 0;
+            const p = 0.05; // 5% chance of crashing each step
+            while (Math.random() > p && K < 1000) {
+                K++;
+            }
+            crashMultiplier = 1.0 + 0.1 * K;
+        }
+
+        function updateGame() {
+            currentMultiplier += 0.1;
+            currentMultiplier = Math.round(currentMultiplier * 10) / 10; // Avoid floating-point issues
+            updateMultiplierDisplay();
+            if (currentMultiplier >= crashMultiplier) {
+                crashGame();
+            }
+        }
+
+        function crashGame() {
+            clearInterval(intervalId);
+            document.getElementById('message').textContent = `Crashed at ${currentMultiplier.toFixed(1)}x`;
+            document.getElementById('startButton').disabled = false;
+            document.getElementById('cashOutButton').disabled = true;
+            gameState = 'idle';
+        }
+
+        function cashOut() {
+            if (gameState !== 'running') return;
+            clearInterval(intervalId);
+            let winnings = betAmount * currentMultiplier;
+            currentCredits += winnings;
+            updateCreditsDisplay();
+            document.getElementById('message').textContent = `You cashed out at ${currentMultiplier.toFixed(1)}x and won ${winnings.toFixed(2)} credits`;
+            document.getElementById('startButton').disabled = false;
+            document.getElementById('cashOutButton').disabled = true;
+            gameState = 'idle';
+        }
+
+        function updateCreditsDisplay() {
+            document.getElementById('credits').textContent = currentCredits.toFixed(2);
+        }
+
+        function updateMultiplierDisplay() {
+            document.getElementById('multiplier').textContent = currentMultiplier.toFixed(1);
+        }
+    </script>
+</body>
+</html>
